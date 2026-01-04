@@ -46,18 +46,58 @@
         flex-shrink: 0;
         scroll-snap-align: start;
         scroll-snap-stop: always;
+        overflow: hidden;
+    }
+
+    /* พื้นหลัง blur สำหรับแต่ละหน้า */
+    .page::before {
+        content: '';
+        position: absolute;
+        top: -20%;
+        left: -20%;
+        width: 140%;
+        height: 140%;
+        background-image: var(--bg-image);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        filter: blur(40px) brightness(0.7);
+        -webkit-filter: blur(40px) brightness(0.7);
+        z-index: 0;
+        opacity: 0;
+        transition: opacity 0.6s ease;
+    }
+
+    .page::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .page.background-loaded::before {
+        opacity: 1;
     }
 
     .page-content {
+        position: relative;
         width: 100%;
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #fff;
+        background: rgba(255, 255, 255, 0.95);
         box-shadow:
             0 0 30px rgba(0, 0, 0, 0.2),
             inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+        z-index: 2;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     }
 
     .page-content img {
@@ -73,6 +113,10 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
+    .cover-page::before {
+        opacity: 0.3;
+    }
+
     /* หน้าเมนู */
     .menu-page {
         background: #fff;
@@ -81,6 +125,10 @@
     /* ท้ายปก */
     .back-cover-page {
         background: linear-gradient(135deg, #93fbb2 0%, #57f577 100%);
+    }
+
+    .back-cover-page::before {
+        opacity: 0.3;
     }
 
     /* Navigation dots */
@@ -423,7 +471,7 @@
         </div>
 
         <!-- Navigation dots -->
-        <!-- <div class="nav-dots" id="navDots"></div> -->
+        <div id="navDots"></div>
 
         <!-- ปุ่มกลับไปบนสุด -->
         <button class="scroll-to-top" id="scrollToTopBtn" aria-label="กลับไปบนสุด" title="กลับไปบนสุด">
@@ -451,6 +499,7 @@
                 this.setupScrollEvents();
                 this.setupKeyboardEvents();
                 this.setupScrollToTop();
+                this.setupBackgrounds();
                 this.loadImages();
                 this.updateCurrentPage();
             }
@@ -530,6 +579,26 @@
                 const scrollToTopBtn = document.getElementById('scrollToTopBtn');
                 scrollToTopBtn.addEventListener('click', () => {
                     this.scrollToPage(0);
+                });
+            }
+
+            setupBackgrounds() {
+                // ตั้งค่าพื้นหลัง blur ให้แต่ละหน้าโดยใช้รูปของหน้านั้นๆ
+                this.pages.forEach((page) => {
+                    const img = page.querySelector('.page-content img');
+                    if (img && img.src) {
+                        // ใช้ CSS variable เพื่อตั้งค่าพื้นหลัง
+                        page.style.setProperty('--bg-image', `url(${img.src})`);
+                        
+                        // รอให้รูปโหลดก่อนแสดงพื้นหลัง
+                        if (img.complete) {
+                            page.classList.add('background-loaded');
+                        } else {
+                            img.addEventListener('load', () => {
+                                page.classList.add('background-loaded');
+                            }, { once: true });
+                        }
+                    }
                 });
             }
             
